@@ -47,7 +47,7 @@ def const_DF():
         print("A lista está vazia!")
     else:
         df = pd.DataFrame({"Objecto": Objectos, "Massa(kg)": Massa, "Velocidade(m/s)": Velocidade, "Altura(m)": Altura, "Energia Cinética(J)": EngCin, "Energia Potencial Gravítica(J)": Epg, "Energia Mecânica(J)":Em})
-        print("Data Frame criado com sucesso!") 
+        print("\nData Frame criado com sucesso!\n") 
         return df
 
 def consultar_DF():
@@ -64,34 +64,53 @@ def consultar_DF():
 
 def construir_array():
     while True:
-        opção = input("Introduza '1' para adicionar dados e '2' para voltar ao menu: " )
-        if opção == "1":
-            try:
-                while True:
-                    objecto = input("Indique o objecto a adicionar: ")
-                    massa = float(input("Indique a massa em kg: "))
-                    velocidade = float(input("Indique a velocidade em m/s: "))
-                    altura = float(input("Indique a altura do objecto em relação ao nível do mar em metros: "))
-                    calc_ec = 0.5*(massa*(velocidade**2))
-                    calc_epg = massa*altura*9.8
-                    calc_em = calc_ec + calc_epg 
-                    Objectos.append(objecto)
-                    Massa.append(massa)
-                    Velocidade.append(velocidade)
-                    Altura.append(altura)
-                    EngCin.append(calc_ec)
-                    Epg.append(calc_epg)
-                    Em.append(calc_em)
-                    print("Registado!")
-                    break
-            except ValueError:
-                print(" Erro! Indique um número!")
+        try:
+            print("1. Registar dados")
+            print("2. Regressar ao Menu Principal")
+            opção = int(input("\nIntroduza a opção: " ))
+            if opção == 1:
                 
-        elif opção == "2":
-            print("Regressar ao menu principal...")
-            break
-        else:
-            print("Opção inválida! Seleccione novamente: ")
+                objecto = input("Indique o objecto a adicionar: ")
+                while True:
+                    try:
+                        massa = float(input("Indique a massa em kg: "))
+                        break
+                    except ValueError:
+                        print("Erro! O valor deve ser numerico!")
+                while True:
+                    try:        
+                        velocidade = float(input("Indique a velocidade em m/s: "))
+                        break
+                    except ValueError:
+                        print("Erro! O valor deve ser numerico!")
+                while True:
+                    try: 
+                        altura = float(input("Indique a altura do objecto em relação ao nível do mar em metros: "))
+                        break
+                    except ValueError:
+                        print("Erro! O valor deve ser numerico!")
+                calc_ec = 0.5*(massa*(velocidade**2))
+                calc_epg = massa*altura*9.8
+                calc_em = calc_ec + calc_epg 
+                Objectos.append(objecto)
+                Massa.append(massa)
+                Velocidade.append(velocidade)
+                Altura.append(altura)
+                EngCin.append(calc_ec)
+                Epg.append(calc_epg)
+                Em.append(calc_em)
+                print("Registado!")
+                
+            elif opção == 2:
+                print("Regressar ao menu principal...")
+                break
+            else:
+                print("Opção inválida! Seleccione novamente: ")
+                    
+        except ValueError:
+            print(" Erro! Indique um número!")
+            
+            
 
 def calc_media ():
     if not Objectos:
