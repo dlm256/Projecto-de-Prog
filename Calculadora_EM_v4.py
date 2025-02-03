@@ -21,7 +21,8 @@ def menu_df():
         try:
             print("1. Criar tratamento de dados em Data Frame")
             print("2. Consultar tabela de dados")
-            print("3. Regressar ao Menu Principal")
+            print("3. Eliminar coluna da tabela de dados")
+            print("4. Regressar ao Menu Principal")
             
             opção = int(input("\nIntroduza a opção: " ))
             
@@ -30,8 +31,11 @@ def menu_df():
             
             elif opção == 2:
                 consultar_DF()
-                
+            
             elif opção == 3:
+                eliminar_coluna()
+                
+            elif opção == 4:
                 print("A regressar ao Menu Principal...")
                 break
             else:
@@ -61,6 +65,22 @@ def consultar_DF():
     print(df)
     print()
     
+def eliminar_coluna():
+    global df
+    if df.empty:
+        print("Data Frame vazio!\n")
+        return
+    
+    nome_coluna = input("Indique o nome da Coluna a eliminar: ") 
+    
+    if nome_coluna not in df.columns:
+        print(f"Erro! A coluna '{nome_coluna}' não consta no DF!\n")
+        return None  
+    
+    df.drop(columns=[nome_coluna], inplace=True)
+    print(f"Coluna '{nome_coluna}' eliminada com sucesso!\n")
+    print()
+
 
 def construir_array():
     while True:
