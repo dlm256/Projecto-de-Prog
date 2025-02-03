@@ -285,7 +285,7 @@ def alterar_objectos():
                     objecto_actualizado = input("Indique um novo objecto: ")
                     massa_actualizada = float(input("Indique uma nova massa: "))
                     h_actualizada = float(input("Indique uma nova altura: "))
-                    velocidade_actualizada = float(input("Indique uma nova velocidade: \n"))
+                    velocidade_actualizada = float(input("Indique uma nova velocidade: "))
                     
                     Objectos[id -1] = objecto_actualizado
                     Massa[id -1] = massa_actualizada
@@ -293,7 +293,8 @@ def alterar_objectos():
                     Altura [id -1] = h_actualizada
                     EngCin[id -1] = 0.5*(massa_actualizada*(velocidade_actualizada**2))
                     Epg[id -1] = massa_actualizada*h_actualizada*9.8
-                    print("Objecto actualizado com sucesso!")
+                    Em[id -1] = EngCin[id -1] + Epg[id -1]
+                    print("\nObjecto actualizado com sucesso!")
                     break
                 else:
                     print("Erro! O id é inválido!")
