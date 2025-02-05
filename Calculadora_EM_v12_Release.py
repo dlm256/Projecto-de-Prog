@@ -153,15 +153,17 @@ def remover_df_linha():
         return
     print(df)
     while True:
-        try:
-            linha = int(input("Introduza o nr da linha do valor a eliminar: "))
-            break
-        except ValueError:
-            print(" Erro! Indique um número!") 
-            
+        while True:
+            try:
+                linha = int(input("Introduza o nr da linha do valor a eliminar: "))
+                break
+            except ValueError:
+                print(" Erro! Indique um número!") 
+                
         if linha not in df.index:
             print(f"Erro! O índice {linha} não consta na tabela!")
-             
+        else:
+            break
     
     df.drop(index = linha, inplace=True)
     print("Linha removida com sucesso!")
@@ -696,43 +698,43 @@ def armazenamento():
 
 
 while True:
-        print("Benvindo(a)!")
-        print("1. Criar lista de objectos e calcular Energia Cinética, Potencial Gravitica e Mecânica")
-        print("2. Gestão e Edição de objectos")
-        print("3. Cálculos adicionais sobre dados registados (Média/Somatórios/Pólos - Maior e Menor)")
-        print("4. Importar ou Guardar dados por ficheiro pickle/Word")
-        print("5. Gráficos de linhas e de Barras - Relações entre dados e resultados")
-        print("6. Tabela de Dados - Data Frame")
-        print("7. Saír")
-        try:
-            escolha = int(input("\nIntroduza a opção: "))
-        
-            if escolha == 1:
-                construir_array()  
-                
-            elif escolha == 2:
-                gestao_array()  
-        
-            elif escolha == 3:
-                calc_adicionais() 
+    print("Benvindo(a)!")
+    print("1. Criar lista de objectos e calcular Energia Cinética, Potencial Gravitica e Mecânica")
+    print("2. Gestão e Edição de objectos")
+    print("3. Cálculos adicionais sobre dados registados (Média/Somatórios/Pólos - Maior e Menor)")
+    print("4. Importar ou Guardar dados por ficheiro pickle/Word")
+    print("5. Gráficos de linhas e de Barras - Relações entre dados e resultados")
+    print("6. Tabela de Dados - Data Frame")
+    print("7. Saír")
+    try:
+        escolha = int(input("\nIntroduza a opção: "))
+    
+        if escolha == 1:
+            construir_array()  
             
-            elif escolha == 4:
-                armazenamento()  
-                
-            elif escolha == 5:
-                menu_graph()
-                
-            elif escolha == 6:
-                menu_df()
+        elif escolha == 2:
+            gestao_array()  
+    
+        elif escolha == 3:
+            calc_adicionais() 
         
-            elif escolha == 7:
-                print("Obrigado!")
-                break
-        
-            else:
-                print("Erro! Escolha errada!")
-                
+        elif escolha == 4:
+            armazenamento()  
             
-        except ValueError:
-                print("Erro! Valor deve ser um numero!")   
+        elif escolha == 5:
+            menu_graph()
+            
+        elif escolha == 6:
+            menu_df()
+    
+        elif escolha == 7:
+            print("Obrigado!")
+            break
+    
+        else:
+            print("Erro! Escolha errada!")
+            
+        
+    except ValueError:
+            print("Erro! Valor deve ser um numero!")   
     
