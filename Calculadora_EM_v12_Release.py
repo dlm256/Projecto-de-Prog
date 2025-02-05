@@ -102,12 +102,12 @@ def calcular_estatística():
         print("Data Frame vazio! ")
         return
     while True:
-        while True:
-            colunas_numericas = df.select_dtypes(include=['float'])
-            print("Colunas numéricas disponíveis: ", ", ".join(colunas_numericas.columns))
+        
+        colunas_numericas = df.select_dtypes(include=['float'])
+        print("Colunas numéricas disponíveis: ", ", ".join(colunas_numericas.columns))
+        
+        coluna = input("Indique em que coluna pretende fazer o cálculo: ")
             
-            coluna = input("Indique em que coluna pretende fazer o cálculo: ")
-            break
         if coluna not in colunas_numericas.columns:
             print(f"Erro! A coluna '{coluna}' não consta desta tabela! ")
         else:
@@ -150,27 +150,25 @@ def editar_df_linha():
         print("Data Frame vazio!\n")
         return
     print(df)
+    
     while True:
-        while True:
-            try:
-                linha = int(input("Introduza o nr da linha a alterar: "))
-                break
-            except ValueError:
-                print("Erro! Indique um número!") 
-                
-            if linha not in df.index:
-                print(f"Erro! O índice {linha} não consta na tabela!")
-            else:
-                break
-        while True:
-            coluna = input("Introduza a coluna a alterar: ")       
-            break
+        try:
+            linha = int(input("Introduza o nr da linha a alterar: "))
+        except ValueError:
+            print("Erro! Indique um número!") 
             
+        if linha not in df.index:
+            print(f"Erro! O índice {linha} não consta na tabela!")
+        else:
+            break
+        
+    while True:
+        coluna = input("Introduza a coluna a alterar: ")       
         if coluna not in df.columns:
             print(f"Erro! A coluna {coluna} não consta na tabela!")
         else:
             break
-        
+    
         
         
     novo_dado = input("Introduza um novo valor: ")
