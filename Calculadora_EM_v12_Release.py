@@ -22,12 +22,13 @@ def menu_df():
             print("1. Criar tratamento de dados em Data Frame")
             print("2. Consultar tabela de dados")
             print("3. Calcular estatisticas por coluna")
-            print("4. Eliminar coluna da tabela de dados")
-            print("5. Editar valor da tabela de dados")
-            print("6. Eliminar linha da tabela de dados")
-            print("7. Exportar tabela para Excel")
-            print("8. Importar tabela de Excel")
-            print("9. Regressar ao Menu Principal")
+            print("4. Calcular estatisticas por coluna")
+            print("5. Eliminar coluna da tabela de dados")
+            print("6. Editar valor da tabela de dados")
+            print("7. Eliminar linha da tabela de dados")
+            print("8. Exportar tabela para Excel")
+            print("9. Importar tabela de Excel")
+            print("10. Regressar ao Menu Principal")
             
             opção = int(input("\nIntroduza a opção: " ))
             
@@ -41,21 +42,24 @@ def menu_df():
                 calcular_estatística()
             
             elif opção == 4:
-                eliminar_coluna()
+                renomear_coluna()
             
             elif opção == 5:
+                eliminar_coluna()
+            
+            elif opção == 6:
                 editar_df_linha()
                 
-            elif opção == 6:
+            elif opção == 7:
                 remover_df_linha()
                 
-            elif opção == 7:
+            elif opção == 8:
                 export_xl()
             
-            elif opção == 8:
+            elif opção == 9:
                 importar_xl()
                 
-            elif opção == 9:
+            elif opção == 10:
                 print("A regressar ao Menu Principal...")
                 break
             else:
@@ -63,6 +67,33 @@ def menu_df():
                 
         except ValueError:
                 print("Erro! Indique um número!") 
+                
+
+def renomear_coluna():
+    global df
+    if df.empty:
+        print("Data Frame vazio! ")
+        return
+    
+    nome_coluna = input("Indique o nome da Coluna a alterar o nome: ")
+
+    
+    if nome_coluna not in df.columns:
+        print(f"Erro! A Coluna '{nome_coluna}' não consta no Data Frame! ")
+        return None  
+    
+    while True:
+        novo_nome_coluna = input("Introduza o novo nome da coluna: ").strip()
+        if not novo_nome_coluna:
+            print("Erro, o nome da coluna não pode ser vazio! ")
+        elif novo_nome_coluna in df.columns:
+            print(f"Erro! A coluna '{novo_nome_coluna}' já consta no Data Frame! ")
+        else:
+            break
+    
+    df.rename(columns={nome_coluna: novo_nome_coluna}, inplace=True)
+    print(f"A coluna '{nome_coluna}' foi renomeada com sucesso para '{novo_nome_coluna}'")
+    print()
                 
 def calcular_estatística():
     global df
