@@ -22,7 +22,7 @@ def menu_df():
             print("1. Criar tratamento de dados em Data Frame")
             print("2. Consultar tabela de dados")
             print("3. Calcular estatisticas por coluna")
-            print("4. Calcular estatisticas por coluna")
+            print("4. Renomear Coluna")
             print("5. Eliminar coluna da tabela de dados")
             print("6. Editar valor da tabela de dados")
             print("7. Eliminar linha da tabela de dados")
@@ -74,14 +74,15 @@ def renomear_coluna():
     if df.empty:
         print("Data Frame vazio! ")
         return
-    
-    nome_coluna = input("Indique o nome da Coluna a alterar o nome: ")
-
-    
-    if nome_coluna not in df.columns:
-        print(f"Erro! A Coluna '{nome_coluna}' não consta no Data Frame! ")
-        return None  
-    
+    while True:  
+        
+        nome_coluna = input("Indique o nome da Coluna a alterar o nome: ")
+           
+        if nome_coluna not in df.columns:
+            print(f"Erro! A Coluna '{nome_coluna}' não consta no Data Frame! ")
+        else:     
+            break
+        
     while True:
         novo_nome_coluna = input("Introduza o novo nome da coluna: ").strip()
         if not novo_nome_coluna:
