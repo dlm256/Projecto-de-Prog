@@ -827,6 +827,7 @@ def const_DB(cursor):
     """
    
     cursor.execute(cmd_sql)
+    print("Tabela criada com sucesso!\n")
     connect_DB.commit()
    
 def ins_DB(cursor):
@@ -854,7 +855,7 @@ def menu_sql():
     while True:
         print("Armazenamento em Base de Dados(SQL)")
         print("1. Criar Base de Dados")
-        print("2. Inserir registoss em SQL na Base de Dados")
+        print("2. Inserir registos em SQL na Base de Dados")
         print("3. Exibir dados armazenados")
         print("4. Saír")
        
