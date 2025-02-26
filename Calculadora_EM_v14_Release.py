@@ -386,6 +386,8 @@ def construir_array():
                     
         except ValueError:
             print(" Erro! Indique um número!")
+
+    
             
             
 
@@ -852,6 +854,9 @@ def search_DB(cursor):
     resultados = cursor.fetchall()
     for resultado in resultados:
         print(resultado)
+    
+    count_DB(cursor)
+    avg_DB(cursor)
    
     connect_DB.commit()
     
@@ -882,42 +887,317 @@ def erase_DB_nome(cursor):
         print("Erro! Objecto não encontrado!")
     connect_DB.commit
     
+def SQL_import(cursor):
+    global Objectos, Massa, Velocidade, Altura, EngCin, Epg, Em
+
+    data_fields = {
+        "Objecto": Objectos,
+        "Massa_Kg": Massa,
+        "Velocidade_m_s": Velocidade,
+        "Altura_m": Altura,
+        "Energia_Cinética_J": EngCin,
+        "Energia_Potencial_Gravítica_J": Epg,
+        "Energia_Mecânica_J": Em
+    }
+
+    for column, array in data_fields.items():
+        cursor.execute(f"SELECT {column} FROM Objectos")
+        array.extend([row[0] for row in cursor.fetchall()])
+        print(array)
+
+    print("Dados importados com sucesso!")
+
+    connect_DB.commit()
+
+    
+    
+def edit_DB(cursor):
+    search_DB(cursor)
+    try:
+        id = int(input("Introduza o id do Objecto a editar: "))
+        cursor.execute("SELECT * FROM Objectos WHERE id = %s", (id,))
+        resultado = cursor.fetchone()
+        
+        
+        if resultado:
+            while True:
+                print("1. Editar nome do Objecto")
+                print("2. Editar massa do Objecto")
+                print("3. Editar velocidade do Objecto")
+                print("4. Editar altura do Objecto")
+                print("5. Editar valores da linha na totalidade")
+                print("6. Saír")
+                try:
+                    escolha = int(input("\nSeleccione uma opção: "))
+                    if escolha == 1:
+                        objecto = input("Indique o objecto a adicionar: ")
+                        cursor.execute("UPDATE Objectos SET Objecto = %s WHERE id = %s" , (objecto, id))
+                        print("Actualização com sucesso!")
+                        
+                    
+                    elif escolha == 2:
+                        while True:
+                            try:
+                                massa = float(input("Indique a massa em kg: "))
+                                cursor.execute("UPDATE Objectos SET Massa_Kg = %s WHERE id = %s" , (massa, id))
+                                print("Actualização com sucesso!")
+                                break
+                            except ValueError:
+                                print("Erro! O valor deve ser numerico!")
+                                
+                    elif escolha == 3:
+                        while True:
+                            try:        
+                                velocidade = float(input("Indique a velocidade em m/s: "))
+                                cursor.execute("UPDATE Objectos SET Velocidade_m_s = %s WHERE id = %s" , (velocidade, id))
+                                print("Actualização com sucesso!")
+                                break
+                            except ValueError:
+                                print("Erro! O valor deve ser numerico!")
+                                
+                    elif escolha == 4:
+                        while True:
+                            try: 
+                                altura = float(input("Indique a altura do objecto em relação ao nível do mar em metros: "))
+                                cursor.execute("UPDATE Objectos SET Altura_m = %s WHERE id = %s" , (altura, id))
+                                print("Actualização com sucesso!")
+                                break
+                            except ValueError:
+                                print("Erro! O valor deve ser numerico!")
+                                
+                    elif escolha == 5:
+                        objecto = input("Indique o objecto a adicionar: ")
+                        while True:
+                            try:
+                                massa = float(input("Indique a massa em kg: "))
+                                break
+                            except ValueError:
+                                print("Erro! O valor deve ser numerico!")
+                        while True:
+                            try:        
+                                velocidade = float(input("Indique a velocidade em m/s: "))
+                                break
+                            except ValueError:
+                                print("Erro! O valor deve ser numerico!")
+                        while True:
+                            try: 
+                                altura = float(input("Indique a altura do objecto em relação ao nível do mar em metros: "))
+                                break
+                            except ValueError:
+                                print("Erro! O valor deve ser numerico!")
+                        cursor.execute("UPDATE Objectos SET Objecto = %s, Massa_Kg = %s, Velocidade_m_s = %s, Altura_m = %s WHERE id = %s" , (objecto, massa, velocidade, altura, id))
+                        print("Actualização com sucesso!")
+                    
+                    elif escolha == 6:
+                        print("A retornar ao menu anterior...")
+                        break
+                    
+                    else:
+                        print("Escolha errada!")
+                        
+                except ValueError:
+                    print("Erro! Valor deve ser um numero!")
+                    
+            
+        else:
+            print("Erro! ID não encontrado!")
+    except ValueError:
+                print("Erro! Valor deve ser um numero!")
+                
+    connect_DB.commit()
+    
+def act_resultados_SQL(cursor):
+    search_DB(cursor)
+    while True:
+        try:
+            print("Actualização de resultados para novos dados introduzidos: ")
+            print("\n1.Actualizar resultados por ID")
+            print("2.Retornar ao menu anterior")
+            escolha = int(input("\nIntroduza uma opção: "))
+            if escolha == 1:
+                try:
+                    id = int(input("\nIntroduza o id para actualizar os resultados: "))
+                    cursor.execute( "SELECT Massa_Kg, Velocidade_m_s, Altura_m FROM Objectos WHERE id = %s", (id,))
+                    resultado = cursor.fetchone()
+
+                    if resultado:
+                        massa, velocidade, altura = resultado
+
+                        if massa is not None and velocidade is not None and altura is not None:
+                            
+                            calc_ec = 0.5 * massa * (velocidade ** 2)
+                            calc_epg = massa * altura * 9.8
+                            calc_em = calc_ec + calc_epg
+
+                            cursor.execute( "UPDATE Objectos SET Energia_Cinética_J = %s,Energia_Potencial_Gravítica_J = %s,Energia_Mecânica_J = %s WHERE id = %s",(calc_ec, calc_epg, calc_em, id))
+                            print("Actualização com sucesso!")
+                        else:
+                            print("Erro! Valor inválido!")
+
+                    else:
+                        print("Erro! ID não encontrado!")
+
+                except ValueError:
+                    print("Erro! O valor do ID deve ser um número.")
+            
+            elif escolha == 2:
+                print("A retornar ao menu anterior...\n")
+                break
+            else:
+                print("Erro! Escolha errada!")
+                
+        except ValueError:
+                    print("Erro! O valor do ID deve ser um número.")
+
+    connect_DB.commit()
+    
+def count_DB(cursor):
+    cursor.execute("SELECT COUNT(*) FROM Objectos")
+    total = cursor.fetchone()[0]
+    print(f"\nO total de Objectos é {total}.")
+    connect_DB.commit()
+    
+def avg_DB(cursor):
+    cursor.execute( "SELECT AVG(Massa_Kg),AVG(Velocidade_m_s),AVG(Altura_m),AVG(Energia_Cinética_J),AVG(Energia_Potencial_Gravítica_J),AVG(Energia_Mecânica_J)FROM Objectos")
+    media = cursor.fetchone()
+    
+    print(f"\nMédia da Massa: {media[0]:.2f} kg")
+    print(f"Média da Velocidade: {media[1]:.2f} m/s")
+    print(f"Média da Altura: {media[2]:.2f} m")
+    print(f"Média da Energia Cinética: {media[3]:.2f} J")
+    print(f"Média da Energia Potencial Gravítica: {media[4]:.2f} J")
+    print(f"Média da Energia Mecânica: {media[5]:.2f} J")
+    connect_DB.commit()
+
+def verificar_tabela(cursor, nome_tabela):
+    cursor.execute("SHOW TABLES LIKE %s", (nome_tabela,))
+    return cursor.fetchone()    
+    
+def filtrar_dados(cursor):
+    nome_tabela = input("Indique o nome da tabela: ").strip()
+
+    if not verificar_tabela(cursor, nome_tabela):
+        print("Erro! A tabela não existe!")
+        return
+
+    # Get column names and their types
+    cursor.execute(f"DESCRIBE {nome_tabela}")
+    colunas_info = cursor.fetchall()
+
+    colunas = {col[0]: col[1] for col in colunas_info}  # Dictionary {column_name: column_type}
+    
+    print("Colunas disponíveis:", ", ".join(colunas.keys()))
+    coluna = input("Indique a coluna para filtrar: ").strip()
+
+    if coluna not in colunas:
+        print("Erro! A coluna não existe na tabela.")
+        return
+
+    # Infer data type and convert input accordingly
+    tipo_coluna = colunas[coluna].lower()
+
+    valor = input(f"Introduza o valor para filtrar na coluna '{coluna}': ").strip()
+
+    # Convert input value based on column type
+    if "int" in tipo_coluna:
+        try:
+            valor = int(valor)
+        except ValueError:
+            print("Erro! O valor deverá ser um número inteiro.")
+            return
+    elif "decimal" in tipo_coluna or "float" in tipo_coluna or "double" in tipo_coluna:
+        try:
+            valor = float(valor)
+        except ValueError:
+            print("Erro! O valor deverá ser um número decimal.")
+            return
+    elif "date" in tipo_coluna or "timestamp" in tipo_coluna:
+        from datetime import datetime
+        try:
+            valor = datetime.strptime(valor, "%Y-%m-%d")  # Adjust format if necessary
+        except ValueError:
+            print("Erro! A data deve estar no formato YYYY-MM-DD.")
+            return
+    # No conversion needed for strings (VARCHAR, TEXT, etc.)
+
+    # Execute the filtered query
+    try:
+        cursor.execute(f"SELECT * FROM {nome_tabela} WHERE {coluna} = %s", (valor,))
+        resultados = cursor.fetchall()
+
+        if resultados:
+            print(f"\nResultados filtrados por {coluna} = {valor}:")
+            for resultado in resultados:
+                print(resultado)
+        else:
+            print("Nenhum registo encontrado neste critério.")
+
+    except sql.Error as erro:
+        print(f"Erro ao filtrar os dados: {erro}")
+
+        
+def listar_tabelas(cursor):
+    try:
+        cursor.execute("SHOW TABLES")
+        tabelas = cursor.fetchall()
+        
+        if tabelas:
+            print("\nTabelas disponíveis na base de dados:")
+            print("\n".join(tabela[0] for tabela in tabelas))
+        else:
+            print("Nenhuma tabela encontrada na base de dados.")
+
+    except sql.Error as erro:
+        print(f"Erro ao listar as tabelas: {erro}")
+
+    
 def menu_sql():
     while True:
-        print("Armazenamento em Base de Dados(SQL)")
+        print("\nArmazenamento em Base de Dados(SQL)")
         print("1. Criar Base de Dados")
         print("2. Inserir registos em SQL na Base de Dados")
         print("3. Exibir dados armazenados")
         print("4. Eliminar linha por ID")
         print("5. Eliminar linha por Objecto")
-        print("6. Saír")
-       
+        print("6. Importar de SQL")
+        print("7. Editar dados por ID")
+        print("8. Atualizar Resultados por ID")
+        print("9. Listar Tabelas Disponíveis")
+        print("10. Filtrar Dados em uma Tabela")
+        print("11. Sair")
+
         try:
             escolha = int(input("\nIntroduza a opção: "))
-       
+
             if escolha == 1:
-                const_DB(cursor)  
-               
+                const_DB(cursor)
             elif escolha == 2:
-                ins_DB(cursor)  
-       
+                ins_DB(cursor)
             elif escolha == 3:
                 search_DB(cursor)
-                
             elif escolha == 4:
-                erase_DB(cursor)  
-       
+                erase_DB(cursor)
             elif escolha == 5:
                 erase_DB_nome(cursor)
-           
             elif escolha == 6:
+                SQL_import(cursor)
+            elif escolha == 7:
+                edit_DB(cursor)
+            elif escolha == 8:
+                act_resultados_SQL(cursor)
+            elif escolha == 9:
+                listar_tabelas(cursor)
+            elif escolha == 10:
+                filtrar_dados(cursor)
+            elif escolha == 11:
                 print("A retornar ao Menu principal...")
                 break
-       
             else:
                 print("Erro! Escolha errada!")
+
         except ValueError:
-                print("Erro! Valor deve ser um numero!")
+            print("Erro! Valor deve ser um número!")
+
  
 connect_DB = ligação_DB()
 if connect_DB:
