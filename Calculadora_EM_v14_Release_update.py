@@ -765,7 +765,7 @@ def gestao_array():
             opção = int(input("Introduza a opção: " ))
             
             if opção == 1:
-                consultar_array()
+                asyncio.run(consultar_array())
             
             elif opção == 2:
                 eliminar_objectos()
