@@ -920,6 +920,24 @@ def SQL_import(connect_DB):
     connect_DB.commit()
 
 
+def SQL_import2(connect_DB):
+    with connect_DB.cursor() as cursor:
+        global Objectos, Massa, Velocidade, Altura, EngCin, Epg, Em
+
+        cursor.execute(
+            "SELECT Objecto, Massa_Kg, Velocidade_ms, Altura_m, "
+            "Energia_Cinética, Energia_PG, Energia_Mecânica "
+            "FROM cem_app_task"
+        )
+        data = cursor.fetchall()
+
+        if data:
+            Objectos, Massa, Velocidade, Altura, EngCin, Epg, Em = map(list, zip(*data))
+        else:
+            Objectos, Massa, Velocidade, Altura, EngCin, Epg, Em = [], [], [], [], [], [], []
+        print("Dados importados com sucesso!")
+    connect_DB.commit()
+
     
     
 def edit_DB(connect_DB):
@@ -1287,14 +1305,15 @@ async def menu_sql():
         print("4. Eliminar linha por ID")
         print("5. Eliminar linha por Objecto")
         print("6. Importar de SQL")
-        print("7. Editar dados por ID")
-        print("8. Atualizar Resultados por ID")
-        print("9. Listar Tabelas Disponíveis")
-        print("10. Filtrar Dados da Tabela")
-        print("11. Adicionar dados à tabela")
-        print("12. Exportar Tabela para CSV")
-        print("13. Importar Tabela para CSV")
-        print("14. Sair")
+        print("7. Importar de SQL")
+        print("8. Editar dados por ID")
+        print("9. Atualizar Resultados por ID")
+        print("10. Listar Tabelas Disponíveis")
+        print("11. Filtrar Dados da Tabela")
+        print("12. Adicionar dados à tabela")
+        print("13. Exportar Tabela para CSV")
+        print("14. Importar Tabela para CSV")
+        print("15. Sair")
 
         try:
             escolha = int(input("\nIntroduza a opção: "))
@@ -1312,20 +1331,22 @@ async def menu_sql():
             elif escolha == 6:
                 SQL_import(connect_DB)
             elif escolha == 7:
-                edit_DB(connect_DB)
+                SQL_import2(connect_DB)
             elif escolha == 8:
-                act_resultados_SQL(connect_DB)
+                edit_DB(connect_DB)
             elif escolha == 9:
-                listar_tabelas(connect_DB)
+                act_resultados_SQL(connect_DB)
             elif escolha == 10:
-                filtrar_dados(connect_DB)
+                listar_tabelas(connect_DB)
             elif escolha == 11:
-                adicionar_dados(connect_DB)
+                filtrar_dados(connect_DB)
             elif escolha == 12:
-                exportar_csv(connect_DB)
+                adicionar_dados(connect_DB)
             elif escolha == 13:
-                importar_csv(connect_DB)
+                exportar_csv(connect_DB)
             elif escolha == 14:
+                importar_csv(connect_DB)
+            elif escolha == 15:
                 print("A retornar ao Menu principal...")
                 await asyncio.sleep(2)
                 break
