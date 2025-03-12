@@ -7,8 +7,11 @@ import mysql.connector as sql
 from mysql.connector import pooling
 import csv
 import asyncio
-
-
+from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives.hashes import SHA256
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC as pss
+import base64
+import os 
 
 
 pool = pooling.MySQLConnectionPool(
@@ -29,6 +32,26 @@ Altura = []
 Epg = []
 Em = []
 
+
+def derivar_chave(password: str, salt: bytes) -> bytes:
+    """Esta função vai gerar uma chave criptografada, 
+    que irá ser baseada na pass(definida pelo user).
+    A password poderá ter como base o salt(dados aleatórios gerados pelo OS)
+    """
+    
+    #Configuração do algoritmo PBKDF2 para derivar a chave encriptada a partir da pass
+    kdf = pss(
+        algorithm=SHA256(), #Algoritmo  de hash - SHA256
+        length=32,          #Tamanho da chave de encriptação(32 bytes, correspondente a 256 bits)
+        salt=salt,          #Atribuíção dos dados aleatórios 'salt'
+        iterations=100000,  #Número de iterações de forma a tornar o processo mais seguro
+        
+    )
+    
+    #Após a configuração da chave de encriptação, 
+    #retorna-se a chave em formato base64, de modo a ser compatível com o método fernet
+    return base64.urlsafe_b64encode(kdf.derive(password.encode()))
+    
 
 
 async def menu_df():
@@ -537,30 +560,58 @@ def guardar_ficheiro ():
         print("A lista está vazia!")
     else:
         try:
+            #Antes de gerar o ficheiro o programa pede pass para encriptar o file
+            password = input("Introduza a password de encriptação: ")
+            
+            #Geram-se os valores aleatórios 'salt' para derivar chave
+            salt = os.urandom(16)
+
+            #Chama-se a função da chave encriptada para se atribuír a pass
+            chave = derivar_chave(password,salt)
+            
+            #Cria-se um objecto 'cipher' que será da classe do método Fernet para a encriptação da
+            #chave  derivada
+            cipher = Fernet(chave)
+            
+            #de seguida vai-se buscar  os dados em array em formato pickle
+            data = pickle.dumps((Objectos, Massa, Velocidade, Altura, EngCin, Epg, Em))
+            
+            #Encriptam-se os dados em array
+            encripted_data = cipher.encrypt(data)
+            
             file_path = input("Introduza a directoria para guardar, incluíndo o nome final do ficheiro no fim:  ")
-            if not file_path.endswith('.pkl'):
-                file_path += '.pkl'
-            with open(file_path, "wb") as ficheiro:
-                pickle.dump((Objectos, Massa, Altura, Velocidade, EngCin, Epg, Em), ficheiro)
-                print("Exportado com sucesso!")
+            with open(file_path, 'wb') as ficheiro:
+                ficheiro.write(salt + encripted_data)
+            print("Ficheiro encriptado e exportado com sucesso!")
         except Exception as e:
-            print(f"Erro ao gerar ficheiro: {e}")
+            print(f"Erro a gerar ficheiro: {e}")
 
 
 def abrir_ficheiro ():
     global Objectos, Massa, Altura, Velocidade, EngCin, Epg, Em
-    
     try:
         file_path = input("Introduza a directoria para abrir doc: ")
-        if not file_path.endswith('.pkl'):
-                file_path += '.pkl'
-        with open(file_path, "rb") as ficheiro:
-            Objectos, Massa, Altura, Velocidade, EngCin, Epg, Em  = pickle.load(ficheiro)
-            print("Ficheiro importado!")
+        
+        password = input("Introduza a password: ")
+        
+        with open(file_path, 'rb') as ficheiro:
+            salt = ficheiro.read(16)
+            
+            encrypted_data = ficheiro.read()
+            
+            chave = derivar_chave(password, salt)
+            
+            cipher = Fernet(chave)
+            
+            data = cipher.decrypt(encrypted_data)
+            
+            Objectos, Massa, Altura, Velocidade, EngCin, Epg, Em = pickle.loads(data)
+            print("Ficheiro desencriptado e importado  com sucesso! ")
     except FileNotFoundError:
         print("Erro! Ficheiro não encontrado!")
     except Exception as e:
         print(f"Erro a abrir ficheiro: {e}")
+        
         
 def gerar_word():
     if not Objectos:
@@ -849,9 +900,9 @@ def ins_DB(connect_DB):
             return None
         
         cmd_sql = "INSERT INTO Objectos (Objecto,Massa_Kg,Velocidade_m_s,Altura_m,Energia_Cinética_J,Energia_Potencial_Gravítica_J,Energia_Mecânica_J) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-
+        
         Arrays = list(zip(Objectos,Massa,Velocidade,Altura,EngCin,Epg,Em))
-    
+        
         cursor.executemany(cmd_sql,Arrays)
     
     
