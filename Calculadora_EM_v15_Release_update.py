@@ -7,12 +7,83 @@ import mysql.connector as sql
 from mysql.connector import pooling
 import csv
 import asyncio
+import bcrypt
+import re
+import logging
 from cryptography.fernet import Fernet
+from cryptography.fernet import InvalidToken as itk
 from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC as pss
 import base64
 import os 
 
+logging.basicConfig(filename='log_actividade.txt', level=logging.INFO, format='%(asctim)s - %(message)s')
+
+def reg_log(action):
+    logging.info(action)
+    
+def encrypt_key():
+    try:
+        with open('chave.key', 'rb') as key_file:
+            return key_file.read()
+    except FileNotFoundError:
+        chave = Fernet.generate_key()
+        with open('chave.key', 'wb') as key_file:
+            key_file.write(chave)
+        return chave
+    
+chave = encrypt_key()
+cipher = Fernet(chave)
+
+def gen_hash_pass(password):
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+def verif_hshpw(password,hash_pw):
+    return bcrypt.checkpw(password.encode('utf-8'), hash_pw)
+
+def validate_pw(password):
+    if (len(password) >= 8 and
+        re.search(r"[A-Z]", password) and
+        re.search(r"[a-z]", password) and
+        re.search(r"[0-9]", password) and
+        re.search(r"[!@£#$§%&-+*/_.]", password)):
+        return True
+    return False
+
+hash_stdpassword = None
+def def_pw():
+    global hash_stdpassword
+    while True:
+        password = input("Introduza a passsword para autenticação: ")
+        if validate_pw(password):
+            hash_stdpassword = gen_hash_pass(password)
+            print("Password definida e encriptada com sucesso!")
+            break
+        else:
+            print("Erro! Introduza nova password e atente aos requisitos, por favor.")
+            
+def auth_user():
+    global hash_stdpassword
+    tentativas = 0
+    while tentativas < 3:
+        password = input("Password de utilizador: ")
+        if verif_hshpw(password,hash_stdpassword):
+            print("Autenticação com sucesso!")
+            return True
+        else:
+            tentativas += 1
+            print("Erro! Password incorrecta!")
+    print("Limite de tentativas excedido")
+    return False
+
+def iniciar_sessao():
+    if hash_stdpassword is None:
+        def_pw()
+    if not auth_user():
+        print("Erro! Acesso negado!")
+        exit()
+     
+iniciar_sessao()
 
 pool = pooling.MySQLConnectionPool(
     host="localhost",
@@ -31,6 +102,7 @@ EngCin = []
 Altura = []
 Epg = []
 Em = []
+
 
 
 def derivar_chave(password: str, salt: bytes) -> bytes:
@@ -521,7 +593,7 @@ def eliminar_objectos():
                     ec_eliminada = EngCin.pop(id -1)
                     epg_eliminada = Epg.pop(id -1)
                     em_eliminada = Em.pop(id -1)
-                    print(f"\nItem com id {id} eliminado!")
+                    print(f"\nObjecto com id {id} eliminado!")
                     break
         except ValueError:
             print("Erro! O id deve ser um numero!")
@@ -555,14 +627,31 @@ def alterar_objectos():
         except ValueError:
                 print("Erro! O id deve ser um numero!")
 
+def verificar_pass(password):
+    if (len(password) <= 8 and
+        any(char.isupper() for char in password) and
+        any(char.islower() for char in password) and
+        any(char.isdigit() for char in password) and
+        any(char in "!@#$%&_.,+-/*£§€?«»<>" for char in password)
+        ):
+        return True
+    return False
+
 def guardar_ficheiro ():
     if not Objectos:
         print("A lista está vazia!")
     else:
         try:
             #Antes de gerar o ficheiro o programa pede pass para encriptar o file
+            print("Defina password com as seguintes características:")
+            print("- Com 8 ou mais caracteres")
+            print("- Com pelo menos uma letra maiúscula e minúscula")
+            print("- Com pelo menos um número")
+            print("- Com pelo menos um caracter especial")
             password = input("Introduza a password de encriptação: ")
-            
+            while not verificar_pass(password):
+                print("Password não cumpr os requisitos minimos! Introduza novamente")
+                password = input("Introduza a password de encriptação: ")
             #Geram-se os valores aleatórios 'salt' para derivar chave
             salt = os.urandom(16)
 
@@ -589,29 +678,38 @@ def guardar_ficheiro ():
 
 def abrir_ficheiro ():
     global Objectos, Massa, Altura, Velocidade, EngCin, Epg, Em
-    try:
-        file_path = input("Introduza a directoria para abrir doc: ")
+    tentativas = 3
+    while tentativas > 0:
         
-        password = input("Introduza a password: ")
-        
-        with open(file_path, 'rb') as ficheiro:
-            salt = ficheiro.read(16)
+        try:
+            file_path = input("Introduza a directoria para abrir doc: ")
             
-            encrypted_data = ficheiro.read()
+            password = input("Introduza a password: ")
             
-            chave = derivar_chave(password, salt)
+            with open(file_path, 'rb') as ficheiro:
+                salt = ficheiro.read(16)
+                
+                encrypted_data = ficheiro.read()
+                
+                chave = derivar_chave(password, salt)
+                
+                cipher = Fernet(chave)
+                
+                data = cipher.decrypt(encrypted_data)
+                
+                Objectos, Massa, Altura, Velocidade, EngCin, Epg, Em = pickle.loads(data)
+                print("Ficheiro desencriptado e importado  com sucesso! ")
+        except FileNotFoundError:
+            print("Erro! Ficheiro não encontrado!")
+        except Exception as e:
+            print(f"Erro a abrir ficheiro: {e}")
+        except itk:
+            tentativas -= 1
+            print(f"Erro! Password incorrecta! Restam {tentativas} tentativas para validar a password!")
+            if tentativas == 0:
+                print("User locked! Exiting...")
+                break
             
-            cipher = Fernet(chave)
-            
-            data = cipher.decrypt(encrypted_data)
-            
-            Objectos, Massa, Altura, Velocidade, EngCin, Epg, Em = pickle.loads(data)
-            print("Ficheiro desencriptado e importado  com sucesso! ")
-    except FileNotFoundError:
-        print("Erro! Ficheiro não encontrado!")
-    except Exception as e:
-        print(f"Erro a abrir ficheiro: {e}")
-        
         
 def gerar_word():
     if not Objectos:
@@ -965,9 +1063,10 @@ def SQL_import(connect_DB):
 
         if data:
             Objectos, Massa, Velocidade, Altura, EngCin, Epg, Em = map(list, zip(*data))
+            print("Dados importados com sucesso!")
         else:
             Objectos, Massa, Velocidade, Altura, EngCin, Epg, Em = [], [], [], [], [], [], []
-        print("Dados importados com sucesso!")
+            print("Base de dados vazia!")
     connect_DB.commit()
 
 
@@ -984,9 +1083,10 @@ def SQL_import2(connect_DB):
 
         if data:
             Objectos, Massa, Velocidade, Altura, EngCin, Epg, Em = map(list, zip(*data))
+            print("Dados importados com sucesso!")
         else:
             Objectos, Massa, Velocidade, Altura, EngCin, Epg, Em = [], [], [], [], [], [], []
-        print("Dados importados com sucesso!")
+            print("Base de dados vazia!")
     connect_DB.commit()
 
     
@@ -1084,6 +1184,7 @@ def edit_DB(connect_DB):
                 print("Erro! ID não encontrado!")
         except ValueError:
                     print("Erro! Valor deve ser um numero!")
+        act_resultados_SQL(connect_DB)
                     
         connect_DB.commit()
     
@@ -1358,13 +1459,12 @@ async def menu_sql():
         print("6. Importar de SQL")
         print("7. Importar de SQL")
         print("8. Editar dados por ID")
-        print("9. Atualizar Resultados por ID")
-        print("10. Listar Tabelas Disponíveis")
-        print("11. Filtrar Dados da Tabela")
-        print("12. Adicionar dados à tabela")
-        print("13. Exportar Tabela para CSV")
-        print("14. Importar Tabela para CSV")
-        print("15. Sair")
+        print("9. Listar Tabelas Disponíveis")
+        print("10. Filtrar Dados da Tabela")
+        print("11. Adicionar dados à tabela")
+        print("12. Exportar Tabela para CSV")
+        print("13. Importar Tabela para CSV")
+        print("14. Sair")
 
         try:
             escolha = int(input("\nIntroduza a opção: "))
@@ -1386,18 +1486,16 @@ async def menu_sql():
             elif escolha == 8:
                 edit_DB(connect_DB)
             elif escolha == 9:
-                act_resultados_SQL(connect_DB)
-            elif escolha == 10:
                 listar_tabelas(connect_DB)
-            elif escolha == 11:
+            elif escolha == 10:
                 filtrar_dados(connect_DB)
-            elif escolha == 12:
+            elif escolha == 11:
                 adicionar_dados(connect_DB)
-            elif escolha == 13:
+            elif escolha == 12:
                 exportar_csv(connect_DB)
-            elif escolha == 14:
+            elif escolha == 13:
                 importar_csv(connect_DB)
-            elif escolha == 15:
+            elif escolha == 14:
                 print("A retornar ao Menu principal...")
                 await asyncio.sleep(2)
                 break
@@ -1410,7 +1508,7 @@ async def menu_sql():
  
 connect_DB = ligação_DB()
 if connect_DB:
- 
+    
  
     while True:
         print("Benvindo(a)!")
